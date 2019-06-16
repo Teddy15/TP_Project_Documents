@@ -1,5 +1,5 @@
 # TP_Project_Documents
-Project for school on Ruby on Rail1s with simple front end.
+Project for school on Ruby on Rails with simple front end.
 
 User login and registration + authentication with devise gem.
 
