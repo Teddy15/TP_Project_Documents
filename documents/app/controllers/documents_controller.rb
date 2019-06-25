@@ -1,17 +1,20 @@
+
 class DocumentsController < ApplicationController
-  before_action :set_document, only: [:show, :edit, :update, :destroy]
-  before_action :authenticate_model!, only: [:show]
+  skip_before_action :verify_authenticity_token, :only => [:create, :destroy, :update, :index, :show, :new]
+  before_action :authenticate_model!, only: [:new]
 
   # GET /documents
   # GET /documents.json
-  
   def index
   	@documents = Document.paginate(:page => params[:page], per_page: 2)
+  	render json: {status: 'SUCCESS', message:'Loaded documents', data:@documents}, status: :ok
   end
   
   # GET /documents/1
   # GET /documents/1.json
   def show
+	@document = Document.find(params[:id])
+	render json: {status: 'SUCCESS', message:'Loaded document', data:@document}, status: :ok
   end
 
   # GET /documents/new
@@ -28,46 +31,40 @@ class DocumentsController < ApplicationController
   def create
     @document = Document.new(document_params)
 
-    respond_to do |format|
       if @document.save
-        format.html { redirect_to @document, notice: 'Document was successfully created.' }
-        format.json { render :show, status: :created, location: @document }
+        render json: {status: 'SUCCESS', message:'Document created', data:@document}, status: :ok
       else
-        format.html { render :new }
-        format.json { render json: @document.errors, status: :unprocessable_entity }
+        render json: {status: 'ERROR', message:'Document not created', data:@document.errors}, status: :unprocessable_entity
       end
-    end
-  end
 
+  end
   # PATCH/PUT /documents/1
   # PATCH/PUT /documents/1.json
   def update
-    respond_to do |format|
-      if @document.update(document_params)
-        format.html { redirect_to @document, notice: 'Document was successfully updated.' }
-        format.json { render :show, status: :ok, location: @document }
+  	@document = Document.find(params[:id])
+      if @document.update_attributes(document_params)
+        render json: {status: 'SUCCESS', message:'Document updated', data:@document}, status: :ok
       else
-        format.html { render :edit }
-        format.json { render json: @document.errors, status: :unprocessable_entity }
+		render json: {status: 'ERROR', message:'Document not updated', data:@document.errors}, status: :unprocessable_entity
       end
-    end
   end
 
   # DELETE /documents/1
   # DELETE /documents/1.json
   def destroy
-    @document.destroy
-    respond_to do |format|
-      format.html { redirect_to documents_url, notice: 'Document was successfully destroyed.' }
-      format.json { head :no_content }
+  	@document = Document.find(params[:id])
+    unless @document.blank?
+    	if @document.destroy
+    		render json: {status: 'SUCCESS', message:'Document deleted', data:@document}, status: :ok
+    	else 
+    		render json: {status: 'ERROR', message:'Document was not deleted', data:@document}, status: :unprocessable_entity
+    	end
+    else 
+   		render json: {status: 'ERROR', message:'No such document', data:@document}, status: :unprocessable_entity
     end
   end
 
   private
-    def set_document
-      @document = Document.find(params[:id])
-    end
-
     def document_params
       params.require(:document).permit(:name, :description, :content)
     end
